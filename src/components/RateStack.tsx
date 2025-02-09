@@ -10,17 +10,11 @@ const RateCard = ({ data, id }: TRateCardProps) => {
   const [slide, setSlide] = useState<boolean>(true);
 
   useEffect(() => {
-    var timeOutHandle: number | undefined;
     setSlide(true);
-    timeOutHandle = setTimeout(() => {
+    const timeOutHandle = setTimeout(() => {
       setSlide(false);
+      clearTimeout(timeOutHandle);
     }, 300);
-
-    return () => {
-      if (timeOutHandle) {
-        clearTimeout(timeOutHandle);
-      }
-    };
   }, [id]);
 
   return (

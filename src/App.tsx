@@ -14,6 +14,8 @@ import { generateUUID } from "./utils/helper";
 
 function App() {
   const ballSpawnTimer = useRef<number>(0);
+  const ballSpawnCounter = useRef<number>(0);
+  const ballSpawnElapse = useRef<number>(BALL_SPAWN_ELAPSE);
   const [balls, setBalls] = useState<Array<TBallData>>([]);
   const ballsRef = useRef<Array<TBallData>>([]);
   const [obstacles, setObstacles] = useState<Array<TObstacleData>>([]);
@@ -37,15 +39,30 @@ function App() {
   // var render = Render.create({
   //   element: document.body,
   //   engine: engine,
-  //   options: { width: 1600, height: 1600 },
+  //   options: {
+  //     width: 1600,
+  //     height: 1600,
+  //     showAxes: true,
+  //     showPerformance: true,
+  //   },
   // });
 
   // setup bounding box
+  const topLeftBBBody = Bodies.rectangle(355, -40, 10, 100, {
+    isStatic: true,
+  });
+  Composite.add(engine.world, topLeftBBBody);
+
   const leftBBBody = Bodies.rectangle(110, 500, 10, 1100, {
     isStatic: true,
     angle: Math.PI / 6 - 0.06,
   });
   Composite.add(engine.world, leftBBBody);
+
+  const topRightBBBody = Bodies.rectangle(665, -40, 10, 100, {
+    isStatic: true,
+  });
+  Composite.add(engine.world, topRightBBBody);
 
   const rightBBBody = Bodies.rectangle(910, 500, 10, 1100, {
     isStatic: true,
@@ -161,13 +178,19 @@ function App() {
       // ball spawn
       if (
         (event.timestamp - ballSpawnTimer.current) / 1000 >
-        BALL_SPAWN_ELAPSE
+        ballSpawnElapse.current
       ) {
-        if (ballsRef.current.length < GENERATE_BALL_NUMB) {
+        if (ballSpawnCounter.current < GENERATE_BALL_NUMB) {
           const newBall = generateBall(Bodies);
           Composite.add(engine.world, newBall.physicsBody);
-          setBalls((prev) => [...prev, newBall]);
           ballsRef.current = [...ballsRef.current, newBall];
+          setBalls(ballsRef.current);
+          ballSpawnCounter.current = ballSpawnCounter.current + 1;
+
+          // speed up
+          ballSpawnElapse.current =
+            ballSpawnElapse.current -
+            0.2 * (ballSpawnCounter.current / GENERATE_BALL_NUMB) ** 2;
         }
 
         ballSpawnTimer.current = event.timestamp;

@@ -13,20 +13,14 @@ export const Obstacle = (props: TObstacleProps) => {
   const [isGlow, setIsGlow] = useState<boolean>(false);
 
   useEffect(() => {
-    var timeOutHandle: number | undefined;
     if (isHit) {
       setIsGlow(true);
-      timeOutHandle = setTimeout(() => {
+      const timeOutHandle = setTimeout(() => {
         setIsGlow(false);
+        clearTimeout(timeOutHandle);
       }, 300);
       resetObstacleIsHit();
     }
-
-    return () => {
-      if (timeOutHandle) {
-        clearTimeout(timeOutHandle);
-      }
-    };
   }, [isHit, resetObstacleIsHit]);
 
   return (
