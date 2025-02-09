@@ -1,0 +1,112 @@
+body {
+  padding: 0;
+  margin: 0;
+}
+
+#root {
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.game {
+  width: 1024px;
+  height: 1024px;
+  position: relative;
+}
+
+.obstacle {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  outline-style: solid;
+}
+
+.ball {
+  position: absolute;
+  background-color: red;
+  border-radius: 50%;
+}
+
+.obstacle-glow {
+  animation: glow 0.3s ease-out;
+}
+
+@keyframes glow {
+  from {
+    outline-width: 8px;
+    outline-color: rgba(255, 255, 255, 0.4);
+  }
+  to {
+    outline-width: 32px;
+    outline-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.paddle {
+  position: absolute;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: black;
+  font-weight: bold;
+}
+
+.paddle-shrink {
+  animation: shrink 0.3s ease-in-out;
+}
+
+@keyframes shrink {
+  0% {
+    transform: translate3d(0, 0px, 0);
+  }
+  50% {
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0px, 0);
+  }
+}
+
+.rate-stack {
+  position: absolute;
+  right: -240px;
+  height: 480px;
+  width: 120px;
+  top: calc((1024px - 480px) / 2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.rate-card {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  font-weight: bold;
+  color: black;
+  border-bottom: 2px solid black;
+}
+
+.rate-card-slide-down {
+  animation: slide-down 0.3s linear;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translate3d(0, -120px, 0);
+  }
+  to {
+    transform: translate3d(0, 0px, 0);
+  }
+}

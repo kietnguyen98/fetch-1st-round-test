@@ -1,0 +1,260 @@
+import { useEffect, useRef, useState } from "react";
+import "./App.css";
+import { Obstacle } from "./components/Obstacle";
+import { BALL_SPAWN_ELAPSE, GENERATE_BALL_NUMB } from "./constants";
+import Matter from "matter-js";
+import { Ball } from "./components/Ball";
+import { generateBall } from "./utils/generateBall";
+import { TBallData, TObstacleData, TPaddleData } from "./type";
+import { generateObstacles } from "./utils/generateObstacles";
+import { generatePaddles } from "./utils/generatePaddles";
+import { Paddle } from "./components/Paddle";
+import { RateStack } from "./components/RateStack";
+import { generateUUID } from "./utils/helper";
+
+function App() {
+  const ballSpawnTimer = useRef<number>(0);
+  const [balls, setBalls] = useState<Array<TBallData>>([]);
+  const ballsRef = useRef<Array<TBallData>>([]);
+  const [obstacles, setObstacles] = useState<Array<TObstacleData>>([]);
+  const obstaclesRef = useRef<Array<TObstacleData>>([]);
+  const [paddles, setPaddles] = useState<Array<TPaddleData>>([]);
+  const paddlesRef = useRef<Array<TPaddleData>>([]);
+  const [hitPaddles, setHitPaddles] = useState<Array<TPaddleData>>([]);
+
+  // module aliases
+  const Engine = Matter.Engine,
+    Runner = Matter.Runner,
+    Bodies = Matter.Bodies,
+    Composite = Matter.Composite,
+    // Render = Matter.Render,
+    Events = Matter.Events;
+
+  // create an engine
+  const engine = Engine.create();
+  engine.gravity = { x: 0, y: 4, scale: 0.0008 };
+
+  // render for debug
+  // var render = Render.create({
+  //   element: document.body,
+  //   engine: engine,
+  //   options: { width: 1600, height: 1600 },
+  // });
+
+  // setup bounding box
+  const leftBBBody = Bodies.rectangle(110, 500, 10, 1100, {
+    isStatic: true,
+    angle: Math.PI / 6 - 0.06,
+  });
+  Composite.add(engine.world, leftBBBody);
+
+  const rightBBBody = Bodies.rectangle(910, 500, 10, 1100, {
+    isStatic: true,
+    angle: -Math.PI / 6 + 0.06,
+  });
+  Composite.add(engine.world, rightBBBody);
+
+  // run matter engine whenever App finish mounting
+  useEffect(() => {
+    // create runner
+    const runner = Runner.create();
+
+    // run the engine
+    Runner.run(runner, engine);
+
+    // run the renderer for debug
+    // Render.run(render);
+
+    // setup collision detection
+    Events.on(engine, "collisionStart", function (event) {
+      // check if obstacle collided with ball
+      // if yes, trigger obstacle state
+      const collidedBodyIds = event.pairs
+        .map((p) => [p.bodyA.id, p.bodyB.id])
+        .flat();
+      obstaclesRef.current = obstaclesRef.current.map((obstacle) =>
+        collidedBodyIds.includes(obstacle.physicsBody.id)
+          ? { ...obstacle, isHit: true }
+          : obstacle
+      );
+      setObstacles(obstaclesRef.current);
+
+      // check if paddle collide with ball
+      const ballIds = ballsRef.current.map((ball) => ball.physicsBody.id);
+      const paddleIds = paddlesRef.current.map(
+        (paddle) => paddle.physicsBody.id
+      );
+
+      event.pairs.forEach((pair) => {
+        const objectA = pair.bodyA;
+        const objectB = pair.bodyB;
+
+        if (ballIds.includes(objectA.id) && paddleIds.includes(objectB.id)) {
+          // remove the ball
+          ballsRef.current = ballsRef.current.filter((ball) => {
+            if (ball.physicsBody.id === objectA.id) {
+              Composite.remove(engine.world, ball.physicsBody);
+              return false;
+            }
+            return true;
+          });
+          setBalls(ballsRef.current);
+
+          // trigger paddle state
+          const hitPaddle = paddlesRef.current.find(
+            (paddle) => paddle.physicsBody.id === objectB.id
+          ) as TPaddleData;
+
+          paddlesRef.current = paddlesRef.current.map((paddle) =>
+            paddle.physicsBody.id === objectB.id
+              ? { ...paddle, isHit: true }
+              : paddle
+          );
+          setPaddles(paddlesRef.current);
+
+          // update rate stack
+          setHitPaddles((prev) => [
+            { ...hitPaddle, id: generateUUID().toString() },
+            ...prev,
+          ]);
+        } else if (
+          ballIds.includes(objectB.id) &&
+          paddleIds.includes(objectA.id)
+        ) {
+          // remove the ball
+          ballsRef.current = ballsRef.current.filter((ball) => {
+            if (ball.physicsBody.id === objectB.id) {
+              Composite.remove(engine.world, ball.physicsBody);
+              return false;
+            }
+            return true;
+          });
+          setBalls(ballsRef.current);
+
+          // trigger paddle state
+          const hitPaddle = paddlesRef.current.find(
+            (paddle) => paddle.physicsBody.id === objectA.id
+          ) as TPaddleData;
+
+          paddlesRef.current = paddlesRef.current.map((paddle) =>
+            paddle.physicsBody.id === objectA.id
+              ? { ...paddle, isHit: true }
+              : paddle
+          );
+          setPaddles(paddlesRef.current);
+
+          // update rate stack
+          setHitPaddles((prev) => [
+            { ...hitPaddle, id: generateUUID().toString() },
+            ...prev,
+          ]);
+        }
+      });
+    });
+
+    Events.on(engine, "beforeUpdate", function (event) {
+      // BALL SPAWN
+      if (
+        (event.timestamp - ballSpawnTimer.current) / 500 >
+        BALL_SPAWN_ELAPSE
+      ) {
+        if (ballsRef.current.length < GENERATE_BALL_NUMB) {
+          const newBall = generateBall(Bodies);
+          Composite.add(engine.world, newBall.physicsBody);
+          setBalls((prev) => [...prev, newBall]);
+          ballsRef.current = [...ballsRef.current, newBall];
+        }
+
+        ballSpawnTimer.current = event.timestamp;
+      }
+    });
+
+    // setup the game
+    setup();
+
+    return () => {
+      Runner.stop(runner);
+    };
+  }, []);
+
+  // start game loop
+  const setup = () => {
+    if (obstaclesRef.current.length === 0) {
+      const obstacles = generateObstacles(Bodies);
+      obstaclesRef.current = obstacles;
+      setObstacles(obstacles);
+      obstacles.forEach((obstacle) =>
+        Composite.add(engine.world, obstacle.physicsBody)
+      );
+    }
+
+    if (paddlesRef.current.length === 0) {
+      const paddles = generatePaddles(Bodies);
+      paddlesRef.current = paddles;
+      setPaddles(paddles);
+      paddles.forEach((paddle) =>
+        Composite.add(engine.world, paddle.physicsBody)
+      );
+    }
+  };
+
+  return (
+    <div id="app" className="app">
+      <div className="game">
+        {balls.map((ball) => (
+          <Ball
+            key={ball.id}
+            position={ball.position}
+            size={ball.size}
+            physicsBody={ball.physicsBody}
+          />
+        ))}
+        {obstacles.map((obstacle) => {
+          return (
+            <Obstacle
+              key={obstacle.id}
+              position={obstacle.position}
+              size={obstacle.size}
+              isHit={obstacle.isHit}
+              resetObstacleIsHit={() => {
+                obstaclesRef.current = obstaclesRef.current.map(
+                  (obstacleData) =>
+                    obstacleData.id === obstacle.id
+                      ? { ...obstacleData, isHit: false }
+                      : obstacleData
+                );
+                setObstacles(obstaclesRef.current);
+              }}
+            />
+          );
+        })}
+        {paddles.map((paddle) => {
+          return (
+            <Paddle
+              key={paddle.id}
+              id={paddle.id}
+              position={paddle.position}
+              width={paddle.width}
+              height={paddle.height}
+              rate={paddle.rate}
+              label={paddle.label}
+              color={paddle.color}
+              isHit={paddle.isHit}
+              resetPaddleIsHit={() => {
+                paddlesRef.current = paddlesRef.current.map((paddleData) =>
+                  paddleData.id === paddle.id
+                    ? { ...paddleData, isHit: false }
+                    : paddleData
+                );
+                setPaddles(paddlesRef.current);
+              }}
+            />
+          );
+        })}
+        <RateStack hitPaddles={hitPaddles} />
+      </div>
+    </div>
+  );
+}
+
+export default App;
