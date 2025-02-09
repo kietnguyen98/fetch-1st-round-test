@@ -1,15 +1,15 @@
+import Matter from "matter-js";
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import { Obstacle } from "./components/Obstacle";
-import { BALL_SPAWN_ELAPSE, GENERATE_BALL_NUMB } from "./constants";
-import Matter from "matter-js";
 import { Ball } from "./components/Ball";
-import { generateBall } from "./utils/generateBall";
-import { TBallData, TObstacleData, TPaddleData } from "./type";
-import { generateObstacles } from "./utils/generateObstacles";
-import { generatePaddles } from "./utils/generatePaddles";
+import { Obstacle } from "./components/Obstacle";
 import { Paddle } from "./components/Paddle";
 import { RateStack } from "./components/RateStack";
+import { BALL_SPAWN_ELAPSE, GENERATE_BALL_NUMB } from "./constants";
+import { TBallData, TObstacleData, TPaddleData } from "./type";
+import { generateBall } from "./utils/generateBall";
+import { generateObstacles } from "./utils/generateObstacles";
+import { generatePaddles } from "./utils/generatePaddles";
 import { generateUUID } from "./utils/helper";
 
 function App() {

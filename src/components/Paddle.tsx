@@ -14,30 +14,32 @@ type TPaddleProps = {
 };
 
 export const Paddle = (props: TPaddleProps) => {
+  const { position, width, height, label, color, isHit, resetPaddleIsHit } =
+    props;
   const [isShrink, setIsShrink] = useState<boolean>(false);
 
   useEffect(() => {
-    if (props.isHit) {
+    if (isHit) {
       setIsShrink(true);
       setTimeout(() => {
         setIsShrink(false);
       }, 300);
-      props.resetPaddleIsHit();
+      resetPaddleIsHit();
     }
-  }, [props.isHit]);
+  }, [isHit, resetPaddleIsHit]);
 
   return (
     <div
       className={`paddle ${isShrink ? "paddle-shrink" : ""}`}
       style={{
-        backgroundColor: props.color,
-        width: props.width,
-        height: props.height,
-        top: props.position.y,
-        left: props.position.x,
+        backgroundColor: color,
+        width: width,
+        height: height,
+        top: position.y,
+        left: position.x,
       }}
     >
-      {props.label}
+      {label}
     </div>
   );
 };

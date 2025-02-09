@@ -9,27 +9,28 @@ export type TObstacleProps = {
 };
 
 export const Obstacle = (props: TObstacleProps) => {
+  const { position, size, isHit, resetObstacleIsHit } = props;
   const [isGlow, setIsGlow] = useState<boolean>(false);
 
   useEffect(() => {
-    if (props.isHit) {
+    if (isHit) {
       setIsGlow(true);
       setTimeout(() => {
         setIsGlow(false);
       }, 300);
-      props.resetObstacleIsHit();
+      resetObstacleIsHit();
     }
-  }, [props.isHit]);
+  }, [isHit, resetObstacleIsHit]);
 
   return (
     <div
       className={`obstacle ${isGlow ? "obstacle-glow" : ""}`}
       data-name="obstacle"
       style={{
-        width: props.size,
-        height: props.size,
-        top: props.position.y,
-        left: props.position.x,
+        width: size,
+        height: size,
+        top: position.y,
+        left: position.x,
       }}
     ></div>
   );

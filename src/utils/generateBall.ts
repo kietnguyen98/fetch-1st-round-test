@@ -1,7 +1,7 @@
-import { BALL_SIZE, BALL_START_Y, SCREEN_WIDTH } from "../constants";
 import Matter from "matter-js";
-import { TBallData } from "../type";
 import { generateUUID } from "./helper";
+import { BALL_SIZE, BALL_START_Y, SCREEN_WIDTH } from "../constants";
+import { TBallData } from "../type";
 
 export function generateBall(Bodies: typeof Matter.Bodies): TBallData {
   const id = generateUUID();

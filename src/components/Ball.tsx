@@ -1,6 +1,6 @@
-import { useEffect, useState, memo } from "react";
-import { TPosition } from "../type";
 import Matter from "matter-js";
+import { memo, useEffect, useState } from "react";
+import { TPosition } from "../type";
 
 export type TBall = {
   position: TPosition;
@@ -9,21 +9,22 @@ export type TBall = {
 };
 
 export const Ball = (props: TBall) => {
-  const [position, setPosition] = useState<TPosition>(props.position);
+  const { position: defaultPosition, size, physicsBody } = props;
+  const [position, setPosition] = useState<TPosition>(defaultPosition);
 
   useEffect(() => {
     const loop = () => {
       setPosition({
-        x: props.physicsBody.position.x - props.size / 2,
-        y: props.physicsBody.position.y - props.size / 2,
+        x: physicsBody.position.x - size / 2,
+        y: physicsBody.position.y - size / 2,
       });
       requestAnimationFrame(loop);
     };
 
     loop();
-  }, []);
+  }, [physicsBody, size]);
 
-  return <BallMesh posX={position.x} posY={position.y} size={props.size} />;
+  return <BallMesh posX={position.x} posY={position.y} size={size} />;
 };
 
 const BallMesh = memo(function BallMesh({

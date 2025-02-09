@@ -1,7 +1,7 @@
 import Matter from "matter-js";
+import { generateUUID } from "./helper";
 import { OBSTACLES_POS, OBSTACLES_SIZE } from "../constants";
 import { TObstacleData } from "../type";
-import { generateUUID } from "./helper";
 
 export function generateObstacles(
   Bodies: typeof Matter.Bodies
