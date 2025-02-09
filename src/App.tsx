@@ -31,8 +31,7 @@ function App() {
     Events = Matter.Events;
 
   // create an engine
-  const engine = Engine.create();
-  engine.gravity = { x: 0, y: 4, scale: 0.0008 };
+  const engine = Engine.create({ gravity: { x: 0, y: 4, scale: 0.0008 } });
 
   // render for debug
   // var render = Render.create({
@@ -80,8 +79,8 @@ function App() {
       setObstacles(obstaclesRef.current);
 
       // check if paddle collide with ball
-      const ballIds = ballsRef.current.map((ball) => ball.physicsBody.id);
-      const paddleIds = paddlesRef.current.map(
+      const ballBodyIds = ballsRef.current.map((ball) => ball.physicsBody.id);
+      const paddleBodyIds = paddlesRef.current.map(
         (paddle) => paddle.physicsBody.id
       );
 
@@ -89,7 +88,13 @@ function App() {
         const objectA = pair.bodyA;
         const objectB = pair.bodyB;
 
-        if (ballIds.includes(objectA.id) && paddleIds.includes(objectB.id)) {
+        // 2 cases:
+        // case 1: object A -> Ball && object B -> Paddle
+        // case 2: object A -> Paddle && object B -> Ball
+        if (
+          ballBodyIds.includes(objectA.id) &&
+          paddleBodyIds.includes(objectB.id)
+        ) {
           // remove the ball
           ballsRef.current = ballsRef.current.filter((ball) => {
             if (ball.physicsBody.id === objectA.id) {
@@ -118,8 +123,8 @@ function App() {
             ...prev,
           ]);
         } else if (
-          ballIds.includes(objectB.id) &&
-          paddleIds.includes(objectA.id)
+          ballBodyIds.includes(objectB.id) &&
+          paddleBodyIds.includes(objectA.id)
         ) {
           // remove the ball
           ballsRef.current = ballsRef.current.filter((ball) => {
@@ -153,9 +158,9 @@ function App() {
     });
 
     Events.on(engine, "beforeUpdate", function (event) {
-      // BALL SPAWN
+      // ball spawn
       if (
-        (event.timestamp - ballSpawnTimer.current) / 500 >
+        (event.timestamp - ballSpawnTimer.current) / 1000 >
         BALL_SPAWN_ELAPSE
       ) {
         if (ballsRef.current.length < GENERATE_BALL_NUMB) {
@@ -169,16 +174,7 @@ function App() {
       }
     });
 
-    // setup the game
-    setup();
-
-    return () => {
-      Runner.stop(runner);
-    };
-  }, []);
-
-  // start game loop
-  const setup = () => {
+    // setup obstacles & paddles
     if (obstaclesRef.current.length === 0) {
       const obstacles = generateObstacles(Bodies);
       obstaclesRef.current = obstacles;
@@ -196,7 +192,14 @@ function App() {
         Composite.add(engine.world, paddle.physicsBody)
       );
     }
-  };
+
+    return () => {
+      Runner.stop(runner);
+      Composite.clear(engine.world, false, true);
+      Events.off(engine, "collisionStart");
+      Events.off(engine, "beforeUpdate");
+    };
+  }, []);
 
   return (
     <div id="app" className="app">

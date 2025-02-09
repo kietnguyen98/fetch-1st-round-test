@@ -19,13 +19,20 @@ export const Paddle = (props: TPaddleProps) => {
   const [isShrink, setIsShrink] = useState<boolean>(false);
 
   useEffect(() => {
+    var timeOutHandle: number | undefined;
     if (isHit) {
       setIsShrink(true);
-      setTimeout(() => {
+      timeOutHandle = setTimeout(() => {
         setIsShrink(false);
       }, 300);
       resetPaddleIsHit();
     }
+
+    return () => {
+      if (timeOutHandle) {
+        clearTimeout(timeOutHandle);
+      }
+    };
   }, [isHit, resetPaddleIsHit]);
 
   return (

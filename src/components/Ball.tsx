@@ -13,15 +13,22 @@ export const Ball = (props: TBall) => {
   const [position, setPosition] = useState<TPosition>(defaultPosition);
 
   useEffect(() => {
-    const loop = () => {
+    var rafHandle: number | undefined;
+    const loopUpdateBallMesh = () => {
       setPosition({
         x: physicsBody.position.x - size / 2,
         y: physicsBody.position.y - size / 2,
       });
-      requestAnimationFrame(loop);
+      rafHandle = requestAnimationFrame(loopUpdateBallMesh);
     };
 
-    loop();
+    loopUpdateBallMesh();
+
+    return () => {
+      if (rafHandle) {
+        cancelAnimationFrame(rafHandle);
+      }
+    };
   }, [physicsBody, size]);
 
   return <BallMesh posX={position.x} posY={position.y} size={size} />;

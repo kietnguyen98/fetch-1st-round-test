@@ -47,7 +47,7 @@ export const OBSTACLES_POS = Array.from(
 
 // BALL CONFIG
 export const GENERATE_BALL_NUMB = 30;
-export const BALL_SPAWN_ELAPSE = 1;
+export const BALL_SPAWN_ELAPSE = 0.5;
 export const BALL_SIZE = 50;
 export const BALL_START_Y = -100;
 
